@@ -1,0 +1,7 @@
+podium/node_modules/
+podium/dist/
+podium/.env
+backend/.env
+backend/firebase-credentials.json
+backend/podium-backend
+backend/*.exe
