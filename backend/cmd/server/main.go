@@ -67,6 +67,12 @@ func main() {
 		v1.GET("/badges", handlers.GetBadges(pool))
 	}
 
+	// Admin / dev routes — no auth, remove before real production
+	admin := r.Group("/api/v1/admin")
+	{
+		admin.POST("/seed", handlers.SeedPrompts(pool))
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

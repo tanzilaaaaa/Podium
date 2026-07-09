@@ -60,12 +60,14 @@ type SubmitRepRequest struct {
 }
 
 type SubmitRepResponse struct {
-	Rep         Rep    `json:"rep"`
-	NewXP       int    `json:"newXp"`
-	NewLevel    int    `json:"newLevel"`
-	NewStreak   int    `json:"newStreak"`
-	LeveledUp   bool   `json:"leveledUp"`
-	XPEarned    int    `json:"xpEarned"`
+	Rep         Rep     `json:"rep"`
+	NewXP       int     `json:"newXp"`
+	NewLevel    int     `json:"newLevel"`
+	NewStreak   int     `json:"newStreak"`
+	LeveledUp   bool    `json:"leveledUp"`
+	StreakLost  bool    `json:"streakLost"`
+	UsedFreeze  bool    `json:"usedFreeze"`
+	XPEarned    int     `json:"xpEarned"`
 	NewBadges   []Badge `json:"newBadges"`
 }
 

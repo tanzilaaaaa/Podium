@@ -76,15 +76,14 @@ func UpdateProfile(ctx context.Context, pool *pgxpool.Pool, uid string, req mode
 }
 
 // ProcessRepCompletion updates XP, level, and streak after a rep is saved.
-// Returns updated profile fields and whether the user leveled up.
-func ProcessRepCompletion(ctx context.Context, pool *pgxpool.Pool, uid string, xpEarned int) (newXP, newLevel, newStreak int, leveledUp bool, err error) {
+// Returns updated profile fields and whether the user leveled up, lost their streak, or used a freeze.
+func ProcessRepCompletion(ctx context.Context, pool *pgxpool.Pool, uid string, xpEarned int) (newXP, newLevel, newStreak int, leveledUp, streakLost, usedFreeze bool, err error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
-		return 0, 0, 0, false, err
+		return 0, 0, 0, false, false, false, err
 	}
 	defer tx.Rollback(ctx)
 
-	// Lock the row
 	var currentXP, currentLevel, currentStreak, currentFreezes int
 	var lastRepDate *time.Time
 
@@ -93,7 +92,7 @@ func ProcessRepCompletion(ctx context.Context, pool *pgxpool.Pool, uid string, x
 		FROM users WHERE id = $1 FOR UPDATE
 	`, uid).Scan(&currentXP, &currentLevel, &currentStreak, &lastRepDate, &currentFreezes)
 	if err != nil {
-		return 0, 0, 0, false, err
+		return 0, 0, 0, false, false, false, err
 	}
 
 	today := time.Now().UTC().Truncate(24 * time.Hour)
@@ -101,13 +100,11 @@ func ProcessRepCompletion(ctx context.Context, pool *pgxpool.Pool, uid string, x
 
 	// Already did a rep today — no double XP
 	if lastRepDate != nil && lastRepDate.Format("2006-01-02") == todayStr {
-		return currentXP, currentLevel, currentStreak, false, nil
+		return currentXP, currentLevel, currentStreak, false, false, false, nil
 	}
 
-	// Streak logic
 	yesterday := today.AddDate(0, 0, -1)
 	newStreak = currentStreak
-	usedFreeze := false
 
 	if lastRepDate == nil {
 		newStreak = 1
@@ -116,9 +113,10 @@ func ProcessRepCompletion(ctx context.Context, pool *pgxpool.Pool, uid string, x
 	} else {
 		// Missed a day
 		if currentFreezes > 0 && currentStreak > 0 {
-			newStreak = currentStreak // freeze saves it
+			newStreak = currentStreak
 			usedFreeze = true
 		} else {
+			streakLost = currentStreak > 1 // only "lost" if they had a real streak
 			newStreak = 1
 		}
 	}
@@ -138,10 +136,10 @@ func ProcessRepCompletion(ctx context.Context, pool *pgxpool.Pool, uid string, x
 		WHERE id = $5
 	`, freezeUpdate), newXP, newLevel, newStreak, todayStr, uid)
 	if err != nil {
-		return 0, 0, 0, false, err
+		return 0, 0, 0, false, false, false, err
 	}
 
-	return newXP, newLevel, newStreak, leveledUp, tx.Commit(ctx)
+	return newXP, newLevel, newStreak, leveledUp, streakLost, usedFreeze, tx.Commit(ctx)
 }
 
 // ─── Level helpers ────────────────────────────────────────────────────────────

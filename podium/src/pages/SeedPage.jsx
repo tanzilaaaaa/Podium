@@ -1,83 +1,79 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { seedDatabase } from '../lib/seedData'
 
 /**
- * One-time admin page to seed Firestore with prompts + badges.
- * Visit /seed, click the button, then never visit again.
- * Remove this route before going to production.
+ * Dev-only page — seeds the Postgres prompts table via the Go backend.
+ * Visit /seed once, click the button, done.
  */
 export default function SeedPage() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState('idle') // idle | loading | done | error
-  const [message, setMessage] = useState('')
+  const [status, setStatus]   = useState('idle')
+  const [result, setResult]   = useState(null)
+  const [error, setError]     = useState('')
 
   async function handleSeed() {
     setStatus('loading')
-    setMessage('')
+    setError('')
     try {
-      await seedDatabase()
+      const res = await fetch('http://localhost:8080/api/v1/admin/seed', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Seed failed')
+      setResult(data)
       setStatus('done')
-      setMessage('✅ Seeded successfully! Prompts and badges are in Firestore.')
     } catch (err) {
+      setError(err.message)
       setStatus('error')
-      setMessage(`❌ Error: ${err.message}`)
-      console.error(err)
     }
   }
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#0A0A0A', display: 'flex',
-      flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', background: '#0d0d1a',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       fontFamily: 'Inter, sans-serif', color: 'white', padding: 24,
     }}>
       <div style={{
         background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 16, padding: 40, maxWidth: 480, width: '100%', textAlign: 'center',
       }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Seed Database</h1>
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 32, lineHeight: 1.6 }}>
-          This will write all prompts and badges to Firestore.
-          Safe to run multiple times — uses batch writes.
+        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Seed Database</h1>
+        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, marginBottom: 32, lineHeight: 1.6 }}>
+          Seeds the Postgres <code>prompts</code> table via the Go backend.
+          Safe to run multiple times — skips duplicates.
         </p>
 
         <button
           onClick={handleSeed}
           disabled={status === 'loading' || status === 'done'}
           style={{
-            background: status === 'done' ? '#22c55e' : '#FF6B6B',
-            color: 'white', fontWeight: 700, fontSize: 16,
-            padding: '14px 32px', borderRadius: 12, border: 'none',
+            background: status === 'done' ? '#22c55e' : '#6644ee',
+            color: 'white', fontWeight: 700, fontSize: 15,
+            padding: '13px 32px', borderRadius: 11, border: 'none',
             cursor: status === 'loading' || status === 'done' ? 'not-allowed' : 'pointer',
             opacity: status === 'loading' ? 0.7 : 1,
             width: '100%', transition: 'opacity 0.2s',
           }}
         >
-          {status === 'idle' && 'Seed Firestore'}
-          {status === 'loading' && 'Seeding...'}
-          {status === 'done' && 'Done ✓'}
-          {status === 'error' && 'Try again'}
+          {status === 'idle'    && 'Seed prompts'}
+          {status === 'loading' && 'Seeding…'}
+          {status === 'done'    && 'Done'}
+          {status === 'error'   && 'Try again'}
         </button>
 
-        {message && (
-          <p style={{
-            marginTop: 20, fontSize: 14, lineHeight: 1.6,
-            color: status === 'done' ? '#86efac' : '#fca5a5',
-          }}>
-            {message}
+        {result && (
+          <p style={{ marginTop: 20, fontSize: 14, color: '#86efac', lineHeight: 1.6 }}>
+            Inserted {result.inserted} of {result.total} prompts into Postgres.
           </p>
         )}
 
+        {error && (
+          <p style={{ marginTop: 20, fontSize: 13, color: '#fca5a5' }}>{error}</p>
+        )}
+
         {status === 'done' && (
-          <button
-            onClick={() => navigate('/home')}
-            style={{
-              marginTop: 20, background: 'transparent', color: 'rgba(255,255,255,0.5)',
-              fontSize: 14, border: 'none', cursor: 'pointer', textDecoration: 'underline',
-            }}
-          >
-            Go to app →
+          <button onClick={() => navigate('/home')}
+            style={{ marginTop: 16, background: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+            Go to app
           </button>
         )}
       </div>

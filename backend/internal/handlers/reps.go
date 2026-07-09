@@ -33,9 +33,8 @@ func SubmitRep(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// 2. Update XP, level, streak
-		newXP, newLevel, newStreak, leveledUp, err := db.ProcessRepCompletion(ctx, pool, uid, rep.XPEarned)
+		newXP, newLevel, newStreak, leveledUp, streakLost, usedFreeze, err := db.ProcessRepCompletion(ctx, pool, uid, rep.XPEarned)
 		if err != nil {
-			// Don't fail the whole request — rep is already saved
 			c.JSON(http.StatusOK, models.SubmitRepResponse{
 				Rep: *rep, XPEarned: rep.XPEarned,
 			})
@@ -46,13 +45,15 @@ func SubmitRep(pool *pgxpool.Pool) gin.HandlerFunc {
 		newBadges, _ := db.CheckAndAwardBadges(ctx, pool, uid)
 
 		c.JSON(http.StatusCreated, models.SubmitRepResponse{
-			Rep:       *rep,
-			NewXP:     newXP,
-			NewLevel:  newLevel,
-			NewStreak: newStreak,
-			LeveledUp: leveledUp,
-			XPEarned:  rep.XPEarned,
-			NewBadges: newBadges,
+			Rep:        *rep,
+			NewXP:      newXP,
+			NewLevel:   newLevel,
+			NewStreak:  newStreak,
+			LeveledUp:  leveledUp,
+			StreakLost: streakLost,
+			UsedFreeze: usedFreeze,
+			XPEarned:   rep.XPEarned,
+			NewBadges:  newBadges,
 		})
 	}
 }

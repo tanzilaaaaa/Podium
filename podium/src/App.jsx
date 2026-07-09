@@ -6,33 +6,31 @@ import ProtectedRoute from './components/ProtectedRoute'
 import BottomNav from './components/BottomNav'
 import { OfflineBanner } from './components/EdgeCaseScreens'
 
-import LandingPage from './pages/LandingPage'
-import AuthPage from './pages/AuthPage'
+import LandingPage    from './pages/LandingPage'
+import AuthPage       from './pages/AuthPage'
 import OnboardingPage from './pages/OnboardingPage'
-import HomePage from './pages/HomePage'
-import RecordPage from './pages/RecordPage'
-import ResultsPage from './pages/ResultsPage'
-import HistoryPage from './pages/HistoryPage'
-import PromptsPage from './pages/PromptsPage'
-import ProgressPage from './pages/ProgressPage'
-import BadgesPage from './pages/BadgesPage'
-import ProfilePage from './pages/ProfilePage'
-import SettingsPage from './pages/SettingsPage'
-import PaywallPage from './pages/PaywallPage'
-import SeedPage from './pages/SeedPage'
+import HomePage       from './pages/HomePage'
+import RecordPage     from './pages/RecordPage'
+import ResultsPage    from './pages/ResultsPage'
+import ProgressPage   from './pages/ProgressPage'
+import BadgesPage     from './pages/BadgesPage'
+import ProfilePage    from './pages/ProfilePage'
+import PromptsPage    from './pages/PromptsPage'
+import HistoryPage    from './pages/HistoryPage'
+import SeedPage       from './pages/SeedPage'
+
+// Pages hidden from nav but still accessible
+const NAV_HIDDEN = ['/', '/auth', '/onboarding', '/record', '/results', '/seed']
 
 export default function App() {
   const [offline, setOffline] = useState(!navigator.onLine)
 
   useEffect(() => {
-    const goOnline = () => setOffline(false)
-    const goOffline = () => setOffline(true)
-    window.addEventListener('online', goOnline)
-    window.addEventListener('offline', goOffline)
-    return () => {
-      window.removeEventListener('online', goOnline)
-      window.removeEventListener('offline', goOffline)
-    }
+    const up   = () => setOffline(false)
+    const down = () => setOffline(true)
+    window.addEventListener('online',  up)
+    window.addEventListener('offline', down)
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
   }, [])
 
   return (
@@ -44,39 +42,29 @@ export default function App() {
 
         <Routes>
           {/* Public */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/"    element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/paywall" element={<PaywallPage />} />
+          <Route path="/seed" element={<SeedPage />} />
 
-          {/* Onboarding — protected so we have user context */}
+          {/* Onboarding — runs once after signup */}
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
 
-          {/* Main app */}
-          <Route path="/home"       element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-          <Route path="/record"     element={<ProtectedRoute><RecordPage /></ProtectedRoute>} />
-          <Route path="/results"    element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
-          <Route path="/progress"   element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
-          <Route path="/badges"     element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
-          <Route path="/profile"    element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-
-          {/* Legacy / util */}
-          <Route path="/history"    element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-          <Route path="/prompts"    element={<ProtectedRoute><PromptsPage /></ProtectedRoute>} />
-          <Route path="/settings"   element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-          <Route path="/seed"       element={<SeedPage />} />
+          {/* Main app — all protected */}
+          <Route path="/home"     element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="/record"   element={<ProtectedRoute><RecordPage /></ProtectedRoute>} />
+          <Route path="/results"  element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
+          <Route path="/progress" element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
+          <Route path="/badges"   element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
+          <Route path="/profile"  element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/prompts"  element={<ProtectedRoute><PromptsPage /></ProtectedRoute>} />
+          <Route path="/history"  element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
-        {/* Bottom nav — only on main app pages */}
+        {/* Bottom nav hidden on non-app pages */}
         <Routes>
-          <Route path="/" element={null} />
-          <Route path="/auth" element={null} />
-          <Route path="/onboarding" element={null} />
-          <Route path="/record" element={null} />
-          <Route path="/results" element={null} />
-          <Route path="/paywall" element={null} />
-          <Route path="/seed" element={null} />
+          {NAV_HIDDEN.map(p => <Route key={p} path={p} element={null} />)}
           <Route path="*" element={<BottomNav />} />
         </Routes>
       </AuthProvider>
