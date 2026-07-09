@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Prompts and badges — public read
+    match /prompts/{promptId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /badges/{badgeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Users — can only read/write their own document
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow create (new signup) and update (XP, streak changes)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+
+      match /reps/{repId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /badgesEarned/{badgeId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}
