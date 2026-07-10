@@ -4,13 +4,24 @@
  */
 
 import { auth } from './firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 
 async function request(method, path, body) {
-  const user = auth.currentUser
+  // Wait for Firebase to restore the auth session (up to 5s)
+  const user = await new Promise((resolve) => {
+    const current = auth.currentUser
+    if (current) return resolve(current)
+    // onAuthStateChanged fires once immediately with the restored user
+    const unsub = auth.onAuthStateChanged((u) => {
+      unsub()
+      resolve(u)
+    })
+  })
+
   if (!user) throw new Error('Not authenticated')
 
   const token = await user.getIdToken()

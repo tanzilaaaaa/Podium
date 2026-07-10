@@ -23,13 +23,21 @@ export function AuthProvider({ children }) {
   // Fetch profile from Go backend and update state
   async function loadProfile(firebaseUser) {
     try {
-      // Sync ensures the row exists in Postgres (no-op if already there)
       const p = await syncUser(firebaseUser.displayName || '')
       setProfile(p)
       return p
     } catch (err) {
-      console.error('Failed to load profile from API:', err)
-      return null
+      console.warn('Backend sync failed — retrying getMe:', err.message)
+      // syncUser might fail if backend is temporarily down; try a plain GET
+      try {
+        const p = await getMe()
+        setProfile(p)
+        return p
+      } catch {
+        // Backend unreachable — app still works, profile just stays null
+        console.error('Could not load profile from backend')
+        return null
+      }
     }
   }
 
