@@ -22,13 +22,17 @@ export default function RecordPage() {
   const [sttUnsupported, setSttUnsupported] = useState(false)
   const [showShortWarning, setShowShortWarning] = useState(false)
 
-  const mediaRecorderRef  = useRef(null)
-  const recognitionRef    = useRef(null)
-  const timerRef          = useRef(null)
-  const startTimeRef      = useRef(null)
+  const mediaRecorderRef   = useRef(null)
+  const recognitionRef     = useRef(null)
+  const timerRef           = useRef(null)
+  const startTimeRef       = useRef(null)
   const finalTranscriptRef = useRef('')
-  const interimRef        = useRef('') // collects interim words as fallback
-  const durationRef       = useRef(0)
+  const interimRef         = useRef('')
+  const durationRef        = useRef(0)
+  const phaseRef           = useRef('pre') // mirror of phase state for use inside closures
+
+  // Keep phaseRef in sync with phase state
+  useEffect(() => { phaseRef.current = phase }, [phase])
 
   useEffect(() => {
     if (!prompt) navigate('/home')
@@ -97,10 +101,9 @@ export default function RecordPage() {
         }
       }
 
-      // When recognition fully ends, onend fires — this is where we submit
+      // When recognition auto-stops mid-recording (e.g. long silence), restart it
       recognition.onend = () => {
-        // If recognition auto-stopped mid-recording (e.g. long pause), restart it
-        if (phase === 'recording' && recognitionRef.current) {
+        if (phaseRef.current === 'recording' && recognitionRef.current) {
           try { recognitionRef.current.start() } catch {}
         }
       }

@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, Zap, Flame, CheckCircle2 } from 'lucide-react'
 import { LevelUpModal, StreakFreezeModal, StreakLostModal } from '../components/Modals'
 import { getLevelName } from '../lib/firestore'
+import { useAuth } from '../context/useAuth'
 
 export default function ResultsPage() {
   const { state } = useLocation()
   const navigate  = useNavigate()
+  const { profile } = useAuth()
 
   const [showTranscript, setShowTranscript] = useState(false)
   const [modal, setModal] = useState(null) // 'levelUp' | 'freeze' | 'lost' | null
@@ -225,7 +227,7 @@ export default function ResultsPage() {
       )}
       {modal === 'freeze' && (
         <StreakFreezeModal
-          freezesLeft={0}
+          freezesLeft={profile?.streakFreezesAvailable ?? 0}
           onUse={() => setModal(null)}
           onSkip={() => setModal(null)}
         />
