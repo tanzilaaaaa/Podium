@@ -138,7 +138,53 @@ export function LevelUpModal({ level, levelName, xpEarned, onClose }) {
   )
 }
 
-// ─── Streak-freeze modal ─────────────────────────────────────────────────────
+// ─── Streak-freeze USED notice (informational — freeze was already auto-applied) ─
+
+export function StreakFreezeUsedModal({ freezesLeft, onClose }) {
+  return (
+    <ModalSheet onClose={onClose}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <motion.div
+          initial={{ scale: 0.4, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', damping: 12 }}
+          style={{
+            width: 80, height: 80, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #0ea5e9, #38bdf8)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
+            boxShadow: '0 0 40px rgba(56,189,248,0.4)',
+          }}
+        >
+          <Snowflake size={36} color="white" />
+        </motion.div>
+
+        <p style={{ color: '#38bdf8', fontWeight: 800, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 6px' }}>
+          Streak saved
+        </p>
+        <h2 style={{ color: 'white', fontSize: 24, fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 8px' }}>
+          Freeze used
+        </h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+          You missed a day, but a streak freeze covered it. Your streak is safe — {freezesLeft} freeze{freezesLeft !== 1 ? 's' : ''} left.
+        </p>
+      </div>
+
+      <button
+        onClick={onClose}
+        style={{
+          width: '100%', padding: '15px', borderRadius: 14, border: 'none',
+          background: 'linear-gradient(135deg, #0369a1, #0ea5e9)',
+          color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer',
+        }}
+      >
+        Got it
+      </button>
+    </ModalSheet>
+  )
+}
+
+// ─── Streak-freeze modal (decision prompt — kept for future use) ──────────────
 
 export function StreakFreezeModal({ freezesLeft, onUse, onSkip }) {
   return (

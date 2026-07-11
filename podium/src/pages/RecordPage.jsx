@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Mic, Square } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
-import { submitRep } from '../lib/api'
+import { submitRep, getReps } from '../lib/api'
 import { MicDeniedScreen, UnsupportedScreen, ShortRecordingBanner } from '../components/EdgeCaseScreens'
 
 const BG = '#0d0d1a'
@@ -161,7 +161,6 @@ export default function RecordPage() {
       // Give it 1.5s max to flush the last results
       const timeout = setTimeout(resolve, 1500)
 
-      const originalOnEnd = rec.onend
       rec.onend = () => {
         clearTimeout(timeout)
         resolve()
@@ -176,6 +175,15 @@ export default function RecordPage() {
     console.log('Transcript captured:', finalText || '(empty)')
 
     try {
+      // Fetch last rep for comparison BEFORE submitting (so we get the previous one)
+      const prevData = await getReps(1).catch(() => ({ reps: [] }))
+      const prevRep = prevData.reps?.[0] || null
+      const prevScores = prevRep ? {
+        clarityScore: prevRep.clarityScore,
+        fillerCount:  prevRep.fillerCount,
+        wpm:          prevRep.wpm,
+      } : null
+
       const response = await submitRep({
         promptId:         prompt.id || '',
         promptText:       prompt.text,
@@ -199,7 +207,7 @@ export default function RecordPage() {
       await refreshProfile()
 
       navigate('/results', {
-        state: { scores, repResult, duration, transcript: finalText, prompt },
+        state: { scores, repResult, duration, transcript: finalText, prompt, prevScores },
       })
     } catch (err) {
       console.error('Failed to submit rep:', err)
@@ -225,6 +233,8 @@ export default function RecordPage() {
     if (!hasMediaRecorder || !hasGetUserMedia) {
       return <UnsupportedScreen missing={['mic']} onGoBack={() => navigate('/home')} />
     }
+    // STT missing (e.g. Firefox) but mic works — show a non-blocking warning banner
+    // recording will still work, just no transcript for scoring
   }
 
   return (
@@ -234,7 +244,20 @@ export default function RecordPage() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', paddingTop: 52, marginBottom: 28 }}>
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => {
+              // Always stop mic before navigating away
+              if (mediaRecorderRef.current) {
+                mediaRecorderRef.current.stream?.getTracks().forEach(t => t.stop())
+                try { mediaRecorderRef.current.stop() } catch {}
+                mediaRecorderRef.current = null
+              }
+              if (recognitionRef.current) {
+                try { recognitionRef.current.abort() } catch {}
+                recognitionRef.current = null
+              }
+              clearInterval(timerRef.current)
+              navigate('/home')
+            }}
             style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <ChevronLeft size={20} />
@@ -320,6 +343,16 @@ export default function RecordPage() {
 
               {showShortWarning && (
                 <ShortRecordingBanner minSeconds={5} onDismiss={() => setShowShortWarning(false)} />
+              )}
+
+              {sttUnsupported && !showShortWarning && (
+                <div style={{
+                  background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+                  borderRadius: 12, padding: '12px 16px', color: '#fbbf24', fontSize: 13,
+                  textAlign: 'center', maxWidth: 300,
+                }}>
+                  Live transcription isn't supported in this browser — recording still works, but scoring will be limited. For best results, use Chrome.
+                </div>
               )}
 
               {error && !showShortWarning && (

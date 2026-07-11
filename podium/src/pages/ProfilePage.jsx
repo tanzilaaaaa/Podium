@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LogOut, Zap, Shield, ChevronRight, Bell, Sun, Moon, Flame, Snowflake } from 'lucide-react'
+import { LogOut, Zap, Shield, ChevronRight, Bell, Sun, Moon, Flame, Activity } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { useTheme, tokens } from '../context/ThemeContext'
 import { getLevelName, getLevelProgress, getXpToNextLevel, LEVELS } from '../lib/firestore'
+import { getReps } from '../lib/api'
 
 export default function ProfilePage() {
   const { user, profile, logout } = useAuth()
@@ -12,6 +13,12 @@ export default function ProfilePage() {
   const t = tokens(theme)
   const navigate = useNavigate()
   const [loggingOut, setLoggingOut] = useState(false)
+  const [totalReps, setTotalReps] = useState(null)
+
+  useEffect(() => {
+    // Fetch total rep count — get 100 and use the count returned
+    getReps(100).then(r => setTotalReps((r.reps || []).length)).catch(() => {})
+  }, [])
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -94,9 +101,9 @@ export default function ProfilePage() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
           {[
-            { icon: <Flame size={16} color="#ef4444" />, value: profile?.streakCount || 0, label: 'Streak' },
-            { icon: <Snowflake size={16} color="#60a5fa" />, value: profile?.streakFreezesAvailable ?? 1, label: 'Freezes' },
-            { icon: <Zap size={16} color="#f59e0b" />, value: xp, label: 'Total XP' },
+            { icon: <Flame size={16} color="#ef4444" />,   value: profile?.streakCount || 0, label: 'Streak' },
+            { icon: <Activity size={16} color="#a78bfa" />, value: totalReps ?? '—',          label: 'Total reps' },
+            { icon: <Zap size={16} color="#f59e0b" />,      value: xp,                        label: 'Total XP' },
           ].map(({ icon, value, label }) => (
             <div key={label} style={{
               background: t.bgCard, border: `1px solid ${t.border}`,
@@ -153,6 +160,11 @@ export default function ProfilePage() {
           <LogOut size={15} />
           {loggingOut ? 'Signing out…' : 'Sign out'}
         </button>
+
+        {/* App version */}
+        <p style={{ color: t.textTer, fontSize: 11, textAlign: 'center', margin: '16px 0 0' }}>
+          Podium v1.0.0 · Built with care
+        </p>
       </div>
     </div>
   )

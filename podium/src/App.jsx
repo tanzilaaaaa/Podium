@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
+import { useAuth } from './context/useAuth'
 import ProtectedRoute from './components/ProtectedRoute'
 import BottomNav from './components/BottomNav'
 import { OfflineBanner } from './components/EdgeCaseScreens'
@@ -19,7 +21,19 @@ import PromptsPage    from './pages/PromptsPage'
 import HistoryPage    from './pages/HistoryPage'
 import SeedPage       from './pages/SeedPage'
 
-// Pages hidden from nav but still accessible
+// Root redirects authenticated users straight to /home
+function RootRedirect() {
+  const { user, loading } = useAuth()
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#0d0d1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid #6644ee', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+  if (user) return <Navigate to="/home" replace />
+  return <LandingPage />
+}
+
 const NAV_HIDDEN = ['/', '/auth', '/onboarding', '/record', '/results', '/seed']
 
 export default function App() {
@@ -41,15 +55,17 @@ export default function App() {
         </AnimatePresence>
 
         <Routes>
+          {/* Root — auto-routes based on auth state */}
+          <Route path="/" element={<RootRedirect />} />
+
           {/* Public */}
-          <Route path="/"    element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/seed" element={<SeedPage />} />
 
-          {/* Onboarding — runs once after signup */}
+          {/* Onboarding — once after signup */}
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
 
-          {/* Main app — all protected */}
+          {/* Main app */}
           <Route path="/home"     element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
           <Route path="/record"   element={<ProtectedRoute><RecordPage /></ProtectedRoute>} />
           <Route path="/results"  element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
@@ -62,7 +78,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
-        {/* Bottom nav hidden on non-app pages */}
         <Routes>
           {NAV_HIDDEN.map(p => <Route key={p} path={p} element={null} />)}
           <Route path="*" element={<BottomNav />} />

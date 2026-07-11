@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { BarChart2 } from 'lucide-react'
+import { BarChart2, X, Mic, Zap } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/useAuth'
 import { useTheme, tokens } from '../context/ThemeContext'
 import { getReps } from '../lib/api'
@@ -30,6 +31,7 @@ export default function ProgressPage() {
   const [reps, setReps] = useState([])
   const [activeMetric, setActiveMetric] = useState('clarityScore')
   const [loading, setLoading] = useState(true)
+  const [detailRep, setDetailRep] = useState(null)
 
   useEffect(() => {
     if (!user) return
@@ -50,9 +52,11 @@ export default function ProgressPage() {
     d.setDate(d.getDate() - (29 - i))
     return d.toDateString()
   })
-  const repDays = new Set(reps.map(r =>
-    r.createdAt?.seconds ? new Date(r.createdAt.seconds * 1000).toDateString() : null
-  ))
+  const repDays = new Set(reps.map(r => {
+    const d = r.createdAt
+    const ms = d?.seconds ? d.seconds * 1000 : d ? new Date(d).getTime() : 0
+    return ms ? new Date(ms).toDateString() : null
+  }))
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: 'Inter, system-ui, sans-serif', paddingBottom: 100 }}>
@@ -154,10 +158,17 @@ export default function ProgressPage() {
             {/* Rep list */}
             <p style={{ color: t.textSec, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 10px' }}>Past reps</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {reps.map(rep => {
-                const date = rep.createdAt?.seconds ? new Date(rep.createdAt.seconds * 1000) : null
+              {reps.map((rep) => {
+                const d = rep.createdAt
+                const ms = d?.seconds ? d.seconds * 1000 : d ? new Date(d).getTime() : 0
+                const date = ms ? new Date(ms) : null
                 return (
-                  <div key={rep.id} style={{ background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 12, padding: '13px 15px' }}>
+                  <div key={rep.id}
+                    onClick={() => setDetailRep(rep)}
+                    style={{ background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 12, padding: '13px 15px', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = t.borderHover}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = t.border}
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                       <p style={{ color: t.text, fontSize: 13, fontWeight: 500, margin: 0, flex: 1, paddingRight: 10, lineHeight: 1.4 }}>
                         {rep.promptText?.slice(0, 60)}{rep.promptText?.length > 60 ? '…' : ''}
@@ -179,6 +190,82 @@ export default function ProgressPage() {
           </>
         )}
       </div>
+
+      {/* Rep detail modal */}
+      <AnimatePresence>
+        {detailRep && (
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setDetailRep(null)}
+            style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          >
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 340 }}
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: 480, background: '#141428', borderRadius: '24px 24px 0 0', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '24px 20px 40px', fontFamily: 'Inter, system-ui, sans-serif' }}
+            >
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)', margin: '0 auto 20px' }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ flex: 1, paddingRight: 12 }}>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 20,
+                    background: 'rgba(102,68,238,0.15)', color: '#a78bfa', border: '1px solid rgba(102,68,238,0.3)',
+                    textTransform: 'capitalize', display: 'inline-block', marginBottom: 8,
+                  }}>{detailRep.category}</span>
+                  <p style={{ color: 'white', fontSize: 15, fontWeight: 500, lineHeight: 1.5, margin: 0 }}>{detailRep.promptText}</p>
+                </div>
+                <button onClick={() => setDetailRep(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Score tiles */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
+                {[
+                  { label: 'Clarity', val: detailRep.clarityScore, unit: '/100' },
+                  { label: 'Fillers', val: detailRep.fillerCount,  unit: 'words' },
+                  { label: 'Pace',    val: detailRep.wpm,          unit: 'wpm' },
+                ].map(({ label, val, unit }) => (
+                  <div key={label} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 3px' }}>{label}</p>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                      <span style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>{val}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>{unit}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Feedback */}
+              {detailRep.feedback?.length > 0 && (
+                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                  {detailRep.feedback.map((f, i) => (
+                    <p key={i} style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, lineHeight: 1.6, margin: i > 0 ? '6px 0 0' : 0 }}>{f}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* XP + date */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {detailRep.xpEarned ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Zap size={13} color="#f59e0b" />
+                    <span style={{ color: '#f59e0b', fontSize: 13, fontWeight: 600 }}>+{detailRep.xpEarned} XP</span>
+                  </div>
+                ) : <span />}
+                {(() => {
+                  const d = detailRep.createdAt
+                  const ms = d?.seconds ? d.seconds * 1000 : d ? new Date(d).getTime() : 0
+                  return ms ? <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>{new Date(ms).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span> : null
+                })()}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -4,12 +4,12 @@ import { motion } from 'framer-motion'
 import {
   Flame, Zap, ChevronRight, Mic,
   TrendingUp, TrendingDown, Minus,
-  CheckCircle2, Sun, Moon,
+  CheckCircle2, Sun, Moon, Award,
 } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { useTheme, tokens } from '../context/ThemeContext'
 import { getLevelName, getLevelProgress, getXpToNextLevel } from '../lib/firestore'
-import { getReps } from '../lib/api'
+import { getReps, getBadges } from '../lib/api'
 import { PROMPTS } from '../lib/seedData'
 
 const CATEGORY_COLORS = {
@@ -40,21 +40,38 @@ export default function HomePage() {
   const [reps, setReps] = useState([])
   const [todayPrompt, setTodayPrompt] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [newBadgeCount, setNewBadgeCount] = useState(0)
 
   useEffect(() => {
     const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
     setTodayPrompt(PROMPTS[dayOfYear % PROMPTS.length])
     if (user) {
       getReps(10).then(r => { setReps(r.reps || []); setLoading(false) })
+      // Check for recently earned badges (earned in last 7 days)
+      getBadges().then(res => {
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+        const recent = (res.badges || []).filter(b => {
+          if (!b.earnedAt) return false
+          return new Date(b.earnedAt).getTime() > sevenDaysAgo
+        })
+        setNewBadgeCount(recent.length)
+      }).catch(() => {})
     } else { setLoading(false) }
   }, [user])
 
   const latestRep = reps[0] || null
   const prevRep = reps[1] || null
   const fillerTrend = latestRep && prevRep ? prevRep.fillerCount - latestRep.fillerCount : 0
-  const paceTrend = latestRep && prevRep ? latestRep.wpm - prevRep.wpm : 0
+  // positive paceTrend = faster than last time, treat as neutral (pace has an ideal range)
+  const paceTrend = latestRep && prevRep
+    ? (Math.abs(latestRep.wpm - 140) < Math.abs(prevRep.wpm - 140) ? 1 : -1)
+    : 0
   const clarityTrend = latestRep && prevRep ? latestRep.clarityScore - prevRep.clarityScore : 0
-  const todayDone = latestRep && new Date(latestRep.createdAt?.seconds * 1000).toDateString() === new Date().toDateString()
+  const todayDone = latestRep && (() => {
+    const d = latestRep.createdAt
+    const ms = d?.seconds ? d.seconds * 1000 : d ? new Date(d).getTime() : 0
+    return ms && new Date(ms).toDateString() === new Date().toDateString()
+  })()
 
   if (!profile && loading) {
     return (
@@ -231,8 +248,8 @@ export default function HomePage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
               {[
                 { label: 'Clarity',  val: latestRep.clarityScore, unit: '/100', trend: clarityTrend },
-                { label: 'Fillers',  val: latestRep.fillerCount,  unit: 'words', trend: -fillerTrend },
-                { label: 'Pace',     val: latestRep.wpm,          unit: 'wpm',  trend: 0 },
+                { label: 'Fillers',  val: latestRep.fillerCount,  unit: 'words', trend: fillerTrend },
+                { label: 'Pace',     val: latestRep.wpm,          unit: 'wpm',  trend: paceTrend },
               ].map(({ label, val, unit, trend }) => (
                 <div key={label} style={{ background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 11, padding: '11px' }}>
                   <p style={{ color: t.textTer, fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>{label}</p>
@@ -252,6 +269,30 @@ export default function HomePage() {
               Complete your first rep to start tracking progress.
             </p>
           </motion.div>
+        )}
+
+        {/* Badges teaser — only show if there are new badges this week */}
+        {newBadgeCount > 0 && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            onClick={() => navigate('/badges')}
+            style={{
+              width: '100%', padding: '13px 16px', borderRadius: 12, marginBottom: 10,
+              border: `1px solid ${t.accentBorder}`, background: t.accentBg,
+              display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left',
+            }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: t.accentBg, border: `1px solid ${t.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Award size={16} color={t.accentLight} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: t.text, fontWeight: 600, fontSize: 13, margin: 0 }}>
+                {newBadgeCount} new badge{newBadgeCount !== 1 ? 's' : ''} this week
+              </p>
+              <p style={{ color: t.textSec, fontSize: 11, margin: '1px 0 0' }}>Tap to view your collection</p>
+            </div>
+            <ChevronRight size={14} color={t.textTer} />
+          </motion.button>
         )}
 
         {/* Browse prompts */}
