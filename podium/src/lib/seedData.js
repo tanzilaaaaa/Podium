@@ -106,77 +106,66 @@ export const BADGES = [
     id: 'first_rep',
     name: 'First Step',
     description: 'Complete your very first rep.',
-    emoji: '🎤',
     criteria: { type: 'rep_count', threshold: 1 },
   },
   {
     id: 'zero_fillers',
     name: 'Clean Delivery',
     description: 'Complete a rep with zero filler words.',
-    emoji: '✨',
     criteria: { type: 'zero_fillers', threshold: 1 },
   },
   {
     id: 'streak_3',
     name: 'On a Roll',
     description: 'Maintain a 3-day streak.',
-    emoji: '🔥',
     criteria: { type: 'streak', threshold: 3 },
   },
   {
     id: 'streak_7',
     name: 'Week Warrior',
     description: 'Maintain a 7-day streak.',
-    emoji: '⚡',
     criteria: { type: 'streak', threshold: 7 },
   },
   {
     id: 'streak_30',
     name: 'Unstoppable',
     description: 'Maintain a 30-day streak.',
-    emoji: '🏆',
     criteria: { type: 'streak', threshold: 30 },
   },
   {
     id: 'rep_10',
     name: 'Getting Reps In',
     description: 'Complete 10 reps.',
-    emoji: '💪',
     criteria: { type: 'rep_count', threshold: 10 },
   },
   {
     id: 'rep_50',
     name: 'Dedicated',
     description: 'Complete 50 reps.',
-    emoji: '🌟',
     criteria: { type: 'rep_count', threshold: 50 },
   },
   {
     id: 'perfect_pace',
     name: 'Perfect Pace',
     description: 'Score 100 on pace.',
-    emoji: '🎯',
     criteria: { type: 'pace_score', threshold: 100 },
   },
   {
     id: 'category_persuasion',
     name: 'Persuader',
     description: 'Complete 5 persuasion prompts.',
-    emoji: '🗣️',
     criteria: { type: 'category_count', category: 'persuasion', threshold: 5 },
   },
   {
     id: 'category_storytelling',
     name: 'Storyteller',
     description: 'Complete 5 storytelling prompts.',
-    emoji: '📖',
     criteria: { type: 'category_count', category: 'storytelling', threshold: 5 },
   },
   {
     id: 'category_interview',
     name: 'Interview Ready',
     description: 'Complete 5 interview prompts.',
-    emoji: '💼',
     criteria: { type: 'category_count', category: 'interview', threshold: 5 },
   },
 ]
@@ -199,5 +188,5 @@ export async function seedDatabase() {
   }
 
   await batch.commit()
-  console.log(`✅ Seeded ${PROMPTS.length} prompts and ${BADGES.length} badges`)
+  console.log(`Seeded ${PROMPTS.length} prompts and ${BADGES.length} badges`)
 }

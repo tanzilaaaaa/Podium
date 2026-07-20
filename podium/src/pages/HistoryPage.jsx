@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, Mic } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { getReps } from '../lib/api'
 
@@ -61,7 +61,9 @@ export default function HistoryPage() {
           </div>
         ) : reps.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <p style={{ fontSize: 40, margin: '0 0 12px' }}>🎤</p>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Mic size={24} color="rgba(255,255,255,0.3)" />
+            </div>
             <p style={{ color: 'white', fontWeight: 700, fontSize: 17, margin: '0 0 8px' }}>No reps yet</p>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Complete your first recording to see your history here.</p>
             <button onClick={() => navigate('/home')}
@@ -74,7 +76,9 @@ export default function HistoryPage() {
             {reps.map((rep, i) => {
               const prev = reps[i + 1]
               const improved = prev && rep.clarityScore > prev.clarityScore
-              const date = rep.createdAt?.seconds ? new Date(rep.createdAt.seconds * 1000) : null
+              const d = rep.createdAt
+              const ms = d?.seconds ? d.seconds * 1000 : d ? new Date(d).getTime() : 0
+              const date = ms ? new Date(ms) : null
               const cs = CATEGORY_STYLES[rep.category] || CATEGORY_STYLES.impromptu
 
               return (

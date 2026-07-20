@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle, ChevronRight, Zap } from 'lucide-react'
+import { CheckCircle, ChevronRight, Zap, Flame } from 'lucide-react'
 
 export default function ResultsView({ prompt, results, onDone }) {
   const { scores, repResult, duration, transcript } = results
@@ -27,12 +27,12 @@ export default function ResultsView({ prompt, results, onDone }) {
           </div>
           {leveledUp && (
             <div className="bg-white/20 rounded-xl px-3 py-1">
-              <span className="text-white text-sm font-semibold">Level up! 🎉</span>
+              <span className="text-white text-sm font-semibold">Level up!</span>
             </div>
           )}
           {newStreak > 0 && !leveledUp && (
             <div className="flex items-center gap-1">
-              <span className="text-2xl">🔥</span>
+              <span className="text-2xl"><Flame className="w-5 h-5 text-red-400 inline" /></span>
               <span className="text-white font-bold">{newStreak} day streak</span>
             </div>
           )}

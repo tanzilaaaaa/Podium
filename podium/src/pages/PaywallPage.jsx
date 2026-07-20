@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Check, X, Zap, Flame, BarChart2 } from 'lucide-react'
+import { Check, X, Zap, Flame, BarChart2, Star, Mic } from 'lucide-react'
 
 const FEATURES_FREE = [
   '1 prompt per day',
@@ -91,7 +91,7 @@ export default function PaywallPage() {
             margin: '0 auto 16px', boxShadow: '0 12px 40px rgba(68,34,204,0.5)',
           }}
         >
-          <span style={{ fontSize: 30 }}>🎤</span>
+          <Mic size={30} color="white" />
         </motion.div>
 
         <motion.h1
@@ -150,7 +150,7 @@ export default function PaywallPage() {
           {[
             { icon: <Flame size={16} color="#ff6b6b" />, value: '12,000+', label: 'Active users' },
             { icon: <BarChart2 size={16} color="#a78bfa" />, value: '380K', label: 'Reps done' },
-            { icon: <span style={{ fontSize: 16 }}>⭐</span>, value: '4.8', label: 'App rating' },
+            { icon: <Star size={16} color="#f59e0b" />, value: '4.8', label: 'App rating' },
           ].map(({ icon, value, label }) => (
             <div key={label} style={{
               background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',

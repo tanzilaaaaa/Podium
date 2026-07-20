@@ -47,8 +47,8 @@ export default function SettingsPage() {
         <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
           <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Your stats</p>
           <div className="space-y-3">
-            <Row label="Current streak" value={`${profile?.streakCount || 0} days 🔥`} />
-            <Row label="Streak freezes" value={`${profile?.streakFreezesAvailable ?? 1} remaining 🧊`} />
+            <Row label="Current streak" value={`${profile?.streakCount || 0} days`} />
+            <Row label="Streak freezes" value={`${profile?.streakFreezesAvailable ?? 1} remaining`} />
             <Row label="Level" value={`${profile?.level || 1} — ${getLevelName(profile?.level || 1)}`} />
             <Row label="Total XP" value={profile?.xp || 0} />
           </div>

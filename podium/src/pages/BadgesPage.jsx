@@ -1,27 +1,34 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, X } from 'lucide-react'
+import {
+  Lock, X,
+  Flame, Calendar, Dumbbell, Trophy,
+  Mic, Target, Rocket, Star,
+  Sparkles, Gem, VolumeX, Music,
+  Zap, Sun, Layers, Crown,
+} from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { useTheme, tokens } from '../context/ThemeContext'
 import { getBadges } from '../lib/api'
 
+// Each badge gets a Lucide icon instead of an emoji
 const ALL_BADGES = [
-  { id: 'streak_3',   emoji: '🔥', name: 'On Fire',        desc: '3-day streak',               category: 'Streaks' },
-  { id: 'streak_7',   emoji: '🗓️', name: 'Week Warrior',   desc: '7-day streak',               category: 'Streaks' },
-  { id: 'streak_14',  emoji: '💪', name: 'Two Weeks In',   desc: '14-day streak',              category: 'Streaks' },
-  { id: 'streak_30',  emoji: '🏆', name: 'Monthly Master', desc: '30-day streak',              category: 'Streaks' },
-  { id: 'reps_1',     emoji: '🎤', name: 'First Words',    desc: 'Complete your first rep',    category: 'Reps' },
-  { id: 'reps_10',    emoji: '🎯', name: 'Ten Reps',       desc: 'Complete 10 reps',           category: 'Reps' },
-  { id: 'reps_25',    emoji: '🚀', name: 'Rising Voice',   desc: 'Complete 25 reps',           category: 'Reps' },
-  { id: 'reps_50',    emoji: '⭐', name: 'Podium Regular', desc: 'Complete 50 reps',           category: 'Reps' },
-  { id: 'score_80',   emoji: '✨', name: 'Sharp',          desc: 'Score 80+ on a rep',         category: 'Performance' },
-  { id: 'score_90',   emoji: '💎', name: 'Diamond',        desc: 'Score 90+ on a rep',         category: 'Performance' },
-  { id: 'no_fillers', emoji: '🤫', name: 'Crisp',          desc: 'Zero filler words in a rep', category: 'Performance' },
-  { id: 'pace_ace',   emoji: '🎵', name: 'Pace Ace',       desc: 'Perfect pace score',         category: 'Performance' },
-  { id: 'xp_100',     emoji: '⚡', name: 'Sparked',        desc: 'Earn 100 XP',                category: 'XP' },
-  { id: 'xp_500',     emoji: '🌟', name: 'Glowing',        desc: 'Earn 500 XP',                category: 'XP' },
-  { id: 'xp_1000',    emoji: '🔮', name: 'Leveled Up',     desc: 'Earn 1,000 XP',              category: 'XP' },
-  { id: 'xp_3000',    emoji: '👑', name: 'Orator',         desc: 'Earn 3,000 XP',              category: 'XP' },
+  { id: 'streak_3',   Icon: Flame,    name: 'On Fire',        desc: '3-day streak',               category: 'Streaks',     color: '#ef4444' },
+  { id: 'streak_7',   Icon: Calendar, name: 'Week Warrior',   desc: '7-day streak',               category: 'Streaks',     color: '#f97316' },
+  { id: 'streak_14',  Icon: Dumbbell, name: 'Two Weeks In',   desc: '14-day streak',              category: 'Streaks',     color: '#f59e0b' },
+  { id: 'streak_30',  Icon: Trophy,   name: 'Monthly Master', desc: '30-day streak',              category: 'Streaks',     color: '#eab308' },
+  { id: 'reps_1',     Icon: Mic,      name: 'First Words',    desc: 'Complete your first rep',    category: 'Reps',        color: '#a78bfa' },
+  { id: 'reps_10',    Icon: Target,   name: 'Ten Reps',       desc: 'Complete 10 reps',           category: 'Reps',        color: '#8b5cf6' },
+  { id: 'reps_25',    Icon: Rocket,   name: 'Rising Voice',   desc: 'Complete 25 reps',           category: 'Reps',        color: '#7c3aed' },
+  { id: 'reps_50',    Icon: Star,     name: 'Podium Regular', desc: 'Complete 50 reps',           category: 'Reps',        color: '#6d28d9' },
+  { id: 'score_80',   Icon: Sparkles, name: 'Sharp',          desc: 'Score 80+ on a rep',         category: 'Performance', color: '#22c55e' },
+  { id: 'score_90',   Icon: Gem,      name: 'Diamond',        desc: 'Score 90+ on a rep',         category: 'Performance', color: '#06b6d4' },
+  { id: 'no_fillers', Icon: VolumeX,  name: 'Crisp',          desc: 'Zero filler words in a rep', category: 'Performance', color: '#10b981' },
+  { id: 'pace_ace',   Icon: Music,    name: 'Pace Ace',       desc: 'Perfect pace score',         category: 'Performance', color: '#14b8a6' },
+  { id: 'xp_100',     Icon: Zap,      name: 'Sparked',        desc: 'Earn 100 XP',                category: 'XP',          color: '#fbbf24' },
+  { id: 'xp_500',     Icon: Sun,      name: 'Glowing',        desc: 'Earn 500 XP',                category: 'XP',          color: '#f59e0b' },
+  { id: 'xp_1000',    Icon: Layers,   name: 'Leveled Up',     desc: 'Earn 1,000 XP',              category: 'XP',          color: '#f97316' },
+  { id: 'xp_3000',    Icon: Crown,    name: 'Orator',         desc: 'Earn 3,000 XP',              category: 'XP',          color: '#ef4444' },
 ]
 
 const CATEGORIES = ['All', 'Streaks', 'Reps', 'Performance', 'XP']
@@ -31,8 +38,8 @@ export default function BadgesPage() {
   const { theme } = useTheme()
   const t = tokens(theme)
 
-  const [earnedMap, setEarnedMap] = useState({})   // id → earnedAt string
-  const [loading, setLoading]     = useState(true)
+  const [earnedMap, setEarnedMap]         = useState({})
+  const [loading, setLoading]             = useState(true)
   const [activeCategory, setActiveCategory] = useState('All')
   const [selectedBadge, setSelectedBadge]   = useState(null)
 
@@ -48,24 +55,24 @@ export default function BadgesPage() {
   }, [user])
 
   // Merge server-earned with profile-derived eligibility
-  const earnedWithProfile = { ...earnedMap }
+  const earned = { ...earnedMap }
   if (profile) {
     const now = new Date().toISOString()
-    if ((profile.streakCount || 0) >= 3  && !earnedWithProfile.streak_3)  earnedWithProfile.streak_3  = now
-    if ((profile.streakCount || 0) >= 7  && !earnedWithProfile.streak_7)  earnedWithProfile.streak_7  = now
-    if ((profile.streakCount || 0) >= 14 && !earnedWithProfile.streak_14) earnedWithProfile.streak_14 = now
-    if ((profile.streakCount || 0) >= 30 && !earnedWithProfile.streak_30) earnedWithProfile.streak_30 = now
-    if ((profile.xp || 0) >= 100  && !earnedWithProfile.xp_100)  earnedWithProfile.xp_100  = now
-    if ((profile.xp || 0) >= 500  && !earnedWithProfile.xp_500)  earnedWithProfile.xp_500  = now
-    if ((profile.xp || 0) >= 1000 && !earnedWithProfile.xp_1000) earnedWithProfile.xp_1000 = now
-    if ((profile.xp || 0) >= 3000 && !earnedWithProfile.xp_3000) earnedWithProfile.xp_3000 = now
+    if ((profile.streakCount || 0) >= 3  && !earned.streak_3)  earned.streak_3  = now
+    if ((profile.streakCount || 0) >= 7  && !earned.streak_7)  earned.streak_7  = now
+    if ((profile.streakCount || 0) >= 14 && !earned.streak_14) earned.streak_14 = now
+    if ((profile.streakCount || 0) >= 30 && !earned.streak_30) earned.streak_30 = now
+    if ((profile.xp || 0) >= 100  && !earned.xp_100)  earned.xp_100  = now
+    if ((profile.xp || 0) >= 500  && !earned.xp_500)  earned.xp_500  = now
+    if ((profile.xp || 0) >= 1000 && !earned.xp_1000) earned.xp_1000 = now
+    if ((profile.xp || 0) >= 3000 && !earned.xp_3000) earned.xp_3000 = now
   }
 
   const filtered = activeCategory === 'All'
     ? ALL_BADGES
     : ALL_BADGES.filter(b => b.category === activeCategory)
 
-  const earnedCount = ALL_BADGES.filter(b => earnedWithProfile[b.id]).length
+  const earnedCount = ALL_BADGES.filter(b => earned[b.id]).length
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, fontFamily: 'Inter, system-ui, sans-serif', paddingBottom: 100 }}>
@@ -105,9 +112,10 @@ export default function BadgesPage() {
       {/* Grid */}
       <div style={{ padding: '14px 20px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
         {filtered.map((badge, i) => {
-          const earnedAt = earnedWithProfile[badge.id]
+          const earnedAt = earned[badge.id]
           const unlocked = !!earnedAt
-          const earnedDate = earnedAt && earnedAt !== new Date().toISOString()
+          const { Icon, color } = badge
+          const earnedDate = earnedAt
             ? new Date(earnedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             : null
 
@@ -126,13 +134,18 @@ export default function BadgesPage() {
                 cursor: 'pointer', transition: 'border-color 0.15s',
               }}
             >
+              {/* Icon circle */}
               <div style={{
                 width: 48, height: 48, borderRadius: '50%',
-                background: unlocked ? t.accentBg : theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                background: unlocked
+                  ? `${color}20`
+                  : theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: unlocked ? 24 : 0,
               }}>
-                {unlocked ? badge.emoji : <Lock size={18} color={t.textTer} />}
+                {unlocked
+                  ? <Icon size={22} color={color} />
+                  : <Lock size={18} color={t.textTer} />
+                }
               </div>
 
               <div>
@@ -170,23 +183,24 @@ export default function BadgesPage() {
             >
               <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)', margin: '0 auto 20px' }} />
 
-              {/* Close */}
               <button onClick={() => setSelectedBadge(null)} style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }}>
                 <X size={18} />
               </button>
 
-              {/* Badge icon */}
+              {/* Icon */}
               <div style={{
                 width: 72, height: 72, borderRadius: '50%', margin: '0 auto 16px',
-                background: selectedBadge.unlocked ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.07)',
+                background: selectedBadge.unlocked ? `${selectedBadge.color}20` : 'rgba(255,255,255,0.07)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: selectedBadge.unlocked ? 36 : 0,
-                boxShadow: selectedBadge.unlocked ? '0 0 32px rgba(167,139,250,0.3)' : 'none',
+                boxShadow: selectedBadge.unlocked ? `0 0 32px ${selectedBadge.color}40` : 'none',
               }}>
-                {selectedBadge.unlocked ? selectedBadge.emoji : <Lock size={28} color="rgba(255,255,255,0.2)" />}
+                {selectedBadge.unlocked
+                  ? <selectedBadge.Icon size={32} color={selectedBadge.color} />
+                  : <Lock size={28} color="rgba(255,255,255,0.2)" />
+                }
               </div>
 
-              <p style={{ color: selectedBadge.unlocked ? '#a78bfa' : 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 6px' }}>
+              <p style={{ color: selectedBadge.unlocked ? t.accentLight : 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 6px' }}>
                 {selectedBadge.unlocked ? 'Unlocked' : 'Locked'}
               </p>
               <h3 style={{ color: 'white', fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>{selectedBadge.name}</h3>

@@ -68,7 +68,7 @@ export default function PromptsPage() {
             background: 'rgba(167,139,250,0.05)',
             color: '#a78bfa', fontSize: 14, fontWeight: 600, cursor: 'pointer',
           }}>
-          🎲 Pick a random {activeCategory !== 'all' ? activeCategory : ''} prompt
+          Pick a random {activeCategory !== 'all' ? activeCategory : ''} prompt
         </button>
 
         {/* Prompt list */}

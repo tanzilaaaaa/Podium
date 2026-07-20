@@ -62,7 +62,7 @@ export function MicDeniedScreen({ onRetry, onGoBack }) {
         textAlign: 'left', marginBottom: 24,
       }}>
         {[
-          'Click the 🔒 lock icon in your browser address bar',
+          'Click the lock icon in your browser address bar',
           'Find "Microphone" in the permissions list',
           'Change it to "Allow"',
           'Refresh the page and try again',
@@ -121,7 +121,7 @@ export function UnsupportedScreen({ missing = [], onGoBack }) {
         </p>
         {['Chrome 80+', 'Edge 80+', 'Samsung Internet 13+'].map(b => (
           <p key={b} style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            ✓ {b}
+            {b}
           </p>
         ))}
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, margin: '8px 0 0' }}>

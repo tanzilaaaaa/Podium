@@ -132,7 +132,7 @@ export function LevelUpModal({ level, levelName, xpEarned, onClose }) {
           color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer',
         }}
       >
-        Keep going 🚀
+        Keep going
       </button>
     </ModalSheet>
   )
@@ -234,7 +234,7 @@ export function StreakFreezeModal({ freezesLeft, onUse, onSkip }) {
           color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer', marginBottom: 10,
         }}
       >
-        🧊 Use streak freeze
+        Use streak freeze
       </button>
       <button
         onClick={onSkip}
@@ -289,7 +289,7 @@ export function StreakLostModal({ lostStreak, onClose }) {
           borderRadius: 12, padding: '12px', marginBottom: 20, textAlign: 'center',
         }}>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, margin: '0 0 2px' }}>Previous best</p>
-          <p style={{ color: 'white', fontWeight: 800, fontSize: 20, margin: 0 }}>{lostStreak} days 🔥</p>
+          <p style={{ color: 'white', fontWeight: 800, fontSize: 20, margin: 0 }}>{lostStreak} days</p>
         </div>
       )}
 
